@@ -1,7 +1,7 @@
 import {Injectable} from 'angular2/di';
 import {DOM} from 'angular2/src/dom/dom_adapter';
 import {Map, MapWrapper, List, ListWrapper} from 'angular2/src/facade/collection';
-import {View} from 'angular2/src/core/compiler/view';
+import {View, DirectiveBindingMemento, ElementBindingMemento} from 'angular2/src/core/compiler/view';
 import {StringWrapper, isBlank, BaseException} from 'angular2/src/facade/lang';
 import * as getTestabilityModule from 'angular2/src/core/testability/get_testability';
 
@@ -16,6 +16,7 @@ export class Testability {
   _pendingCount: number;
   _callbacks: List;
   _rootView: View;
+  _bindingMap: Map;
 
   constructor(rootView: View) {
     this._pendingCount = 0;
@@ -52,9 +53,60 @@ export class Testability {
     return this._pendingCount;
   }
 
+  _addBindingsFromView(view: View) {
+    // TODO - this (maybe? maybe not?) won't work for the JIT change detector
+    // TODO - figure out how to switch to the JIT change detector
+    var protos = view.changeDetector.protos; // These are ProtoRecords
+    for (var i = 0; i < protos.length; ++i) {
+      var memento = protos[i].bindingMemento;
+      var elem = null;
+      if (memento instanceof DirectiveBindingMemento) {
+        // TODO - figure out what this case is.
+        continue;
+      } else if (memento instanceof ElementBindingMemento) {
+        // TODO - can we do this without accessing the private variable?
+        // This will (probably?) fail in dart.
+        elem = view.bindElements[memento._elementIndex];
+      } else {
+        // memento is an integer index into textNodes.
+        elem = view.textNodes[memento].parentElement;
+      }
+
+      var bindingName = protos[i].name;
+      if (bindingName == 'interpolate') {
+        continue;
+      }
+      if (!MapWrapper.contains(this._bindingMap, bindingName)) {
+        MapWrapper.set(this._bindingMap, bindingName, [elem]);
+      } else {
+        ListWrapper.push(MapWrapper.get(this._bindingMap, bindingName), elem);
+      }
+    }
+
+    for (var j = 0; j < view.componentChildViews.length; ++j) {
+      this._addBindingsFromView(view.componentChildViews[j]);
+      // TODO - and also add view containers here?
+    }
+  }
+
   findBindings(using, binding: string, exactMatch: boolean): List {
     // TODO(juliemr): implement.
-    return [];
+    console.log(this._rootView);
+
+    this._bindingMap = MapWrapper.create();
+    this._addBindingsFromView(this._rootView);
+
+    if (exactMatch) {
+      return MapWrapper.get(this._bindingMap, binding);
+    } else {
+      var matches = ListWrapper.create();
+      MapWrapper.forEach(this._bindingMap, (elems, name) => {
+        if (StringWrapper.contains(name, binding)) {
+          matches = ListWrapper.concat(matches, elems);
+        }
+      });
+      return matches;
+    }
   }
 }
 

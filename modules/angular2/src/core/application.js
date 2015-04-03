@@ -252,8 +252,9 @@ export function bootstrap(appComponentType: Type,
 
     PromiseWrapper.then(PromiseWrapper.all([appInjector.asyncGet(appViewToken),
         appInjector.asyncGet(Testability)]),
-      (rootView, testability) => {
-        console.log('I am in here');
+      (results) => {
+        var rootView = results[0];
+        var testability = results[1];
         // retrieve life cycle: may have already been created if injected in root component
         var lc=appInjector.get(LifeCycle);
         lc.registerWith(zone, rootView.changeDetector);
