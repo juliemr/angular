@@ -1,6 +1,7 @@
 import {Injectable} from 'angular2/di';
 import {DOM} from 'angular2/src/dom/dom_adapter';
 import {Map, MapWrapper, List, ListWrapper} from 'angular2/src/facade/collection';
+import {View} from 'angular2/src/core/compiler/view';
 import {StringWrapper, isBlank, BaseException} from 'angular2/src/facade/lang';
 import * as getTestabilityModule from 'angular2/src/core/testability/get_testability';
 
@@ -14,10 +15,12 @@ import * as getTestabilityModule from 'angular2/src/core/testability/get_testabi
 export class Testability {
   _pendingCount: number;
   _callbacks: List;
+  _rootView: View;
 
-  constructor() {
+  constructor(rootView: View) {
     this._pendingCount = 0;
     this._callbacks = ListWrapper.create();
+    this._rootView = rootView;
   }
 
   increaseCount(delta: number = 1) {

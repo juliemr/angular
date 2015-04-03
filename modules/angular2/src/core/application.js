@@ -61,11 +61,7 @@ function _injectorBindings(appComponentType): List<Binding> {
         return element;
       }, [appComponentAnnotatedTypeToken, appDocumentToken]),
       bind(appViewToken).toAsyncFactory((changeDetection, compiler, injector, appElement,
-        appComponentAnnotatedType, strategy, eventManager, testability, registry) => {
-
-        // We need to do this here to ensure that we create Testability and
-        // it's ready on the window for users.
-        registry.registerApplication(appElement, testability);
+        appComponentAnnotatedType, strategy, eventManager) => {
         var annotation = appComponentAnnotatedType.annotation;
         if(!isBlank(annotation) && !(annotation instanceof Component)) {
           var type = appComponentAnnotatedType.type;
@@ -86,7 +82,7 @@ function _injectorBindings(appComponentType): List<Binding> {
           return view;
         });
       }, [ChangeDetection, Compiler, Injector, appElementToken, appComponentAnnotatedTypeToken,
-          ShadowDomStrategy, EventManager, Testability, TestabilityRegistry]),
+          ShadowDomStrategy, EventManager]),
 
       bind(appChangeDetectorToken).toFactory((rootView) => rootView.changeDetector,
           [appViewToken]),
@@ -100,6 +96,11 @@ function _injectorBindings(appComponentType): List<Binding> {
       bind(ShadowDomStrategy).toFactory(
           (styleUrlResolver, doc) => new EmulatedUnscopedShadowDomStrategy(styleUrlResolver, doc.head),
           [StyleUrlResolver, appDocumentToken]),
+      bind(Testability).toFactory((rootView, appElement, registry) => {
+        var testability = new Testability(rootView);
+        registry.registerApplication(appElement, testability);
+        return testability;
+      }, [appViewToken, appElementToken, TestabilityRegistry]),
       Compiler,
       CompilerCache,
       TemplateResolver,
@@ -115,7 +116,6 @@ function _injectorBindings(appComponentType): List<Binding> {
       StyleUrlResolver,
       StyleInliner,
       PrivateComponentLoader,
-      Testability,
   ];
 }
 
@@ -250,8 +250,10 @@ export function bootstrap(appComponentType: Type,
 
     var appInjector = _createAppInjector(appComponentType, componentServiceBindings, zone);
 
-    PromiseWrapper.then(appInjector.asyncGet(appViewToken),
-      (rootView) => {
+    PromiseWrapper.then(PromiseWrapper.all([appInjector.asyncGet(appViewToken),
+        appInjector.asyncGet(Testability)]),
+      (rootView, testability) => {
+        console.log('I am in here');
         // retrieve life cycle: may have already been created if injected in root component
         var lc=appInjector.get(LifeCycle);
         lc.registerWith(zone, rootView.changeDetector);
