@@ -1,14 +1,58 @@
-import {describe, ddescribe, it, iit, xit, xdescribe, expect, beforeEach} from 'angular2/test_lib';
+import {
+  AsyncTestCompleter,
+  beforeEach,
+  ddescribe,
+  describe,
+  expect,
+  iit,
+  inject,
+  it,
+  xdescribe,
+  xit,
+} from 'angular2/test_lib';
+import {appDocumentToken, appElementToken} from 'angular2/src/core/application_tokens';
 import {Testability} from 'angular2/src/core/testability/testability';
+import {bootstrap} from 'angular2/src/core/application';
+import {Component, Decorator} from 'angular2/src/core/annotations/annotations';
 
+@Component({selector: 'hello-app'})
+@Template({inline: '{{bindinga}} {{bindingb}}'})
+class HelloRootCmp {
+  bindinga: string;
+  bindingb: string;
+
+  constructor() {
+    this.bindinga = 'hello';
+    this.bindingb = 'world';
+  }
+}
 
 export function main() {
-  describe('Testability', () => {
+  ddescribe('Testability', () => {
+    var fakeDoc, el, testBindings;
     var testability, executed;
 
     beforeEach(() => {
+      fakeDoc = DOM.createHtmlDocument();
+      el = DOM.createElement('hello-app', fakeDoc);
+      lightDom = DOM.createElement('light-dom-el', fakeDoc);
+      DOM.appendChild(fakeDoc.body, el);
+      DOM.appendChild(el, lightDom);
+      DOM.setText(lightDom, 'loading');
+      testBindings = [bind(appDocumentToken).toValue(fakeDoc)];
+
       testability = new Testability();
       executed = false;
+    });
+
+    describe('findBindings', () => {
+      it('should resolve an injector promise and contain bindings', inject([AsyncTestCompleter], (async) => {
+        var injectorPromise = bootstrap(HelloRootCmp, testBindings);
+        injectorPromise.then((injector) => {
+          expect(injector.get(appElementToken)).toBe(el);
+          async.done();
+        });
+      }));
     });
 
     it('should start with a pending count of 0', () => {
