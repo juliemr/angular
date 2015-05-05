@@ -365,13 +365,10 @@ gulp.task('test.unit.dart', function (neverDone) {
 // Then change and save a file in modules/angular2. The first time it should
 // work, the second will error.
 gulp.task('wip.watch.dart', function (neverDone) {
-  gulp.watch('modules/angular2/**', function() {
-    console.log('*** file changed');
-    runSequence(
-      'build/tree.dart'
-      // 'build/packages.dart'
-    );
-  });
+  runSequence(
+    'build/tree.dart',
+    'build/tree.dart'
+  );
 });
 
 gulp.task('test.unit.dart/karma-run', function (done) {
