@@ -343,7 +343,7 @@ gulp.task('test.unit.js/karma-run', function (done) {
   karma.runner.run({configFile: __dirname + '/karma-js.conf.js'}, done);
 });
 
-gulp.task('test.unit.dart', function (done) {
+gulp.task('test.unit.dart', function (neverDone) {
   function buildAndTest() {
     runSequence(
       'build/tree.dart',
@@ -356,6 +356,21 @@ gulp.task('test.unit.dart', function (done) {
 
   gulp.watch('modules/angular2/**', function() {
     buildAndTest();
+  });
+});
+
+
+// To reproduce error: run
+//      gulp wip.watch.dart
+// Then change and save a file in modules/angular2. The first time it should
+// work, the second will error.
+gulp.task('wip.watch.dart', function (neverDone) {
+  gulp.watch('modules/angular2/**', function() {
+    console.log('*** file changed');
+    runSequence(
+      'build/tree.dart'
+      // 'build/packages.dart'
+    );
   });
 });
 
