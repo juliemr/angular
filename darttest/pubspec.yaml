@@ -1,0 +1,31 @@
+name: examples
+environment:
+  sdk: '>=1.10.0-dev.1.10 <2.0.0'
+dependencies:
+  angular2: '^2.0.0-alpha.31'
+  browser: '^0.10.0'
+dev_dependencies:
+  guinness: '^0.1.17'
+  test: '^0.12.3'
+dependency_overrides:
+  angular2:
+    path: ../dist/dart/angular2
+transformers:
+- angular2:
+    # The build currently fails on material files because there is not yet
+    # support for transforming cross-package urls. (see issue #2982)
+    $exclude: 'web/src/material/**'
+    entry_points:
+        - web/src/hello_world/index_common.dart
+        - web/src/todo/index.dart
+    reflection_entry_points:
+        - web/src/hello_world/index.dart
+        - web/src/todo/index.dart
+- $dart2js:
+    minify: false
+    commandLineOptions:
+    - --dump-info
+    - --show-package-warnings
+    - --trust-type-annotations
+    - --trust-primitives
+    - --enable-experimental-mirrors
