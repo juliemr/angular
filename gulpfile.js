@@ -743,6 +743,8 @@ gulp.task('test.server.dart', runServerDartTests(gulp, gulpPlugins, {dest: 'dist
 gulp.task('test.transpiler.unittest',
           function(done) { runJasmineTests(['tools/transpiler/unittest/**/*.js'], done); });
 
+gulp.task('test.dart.angular2_test', shell.task(['pub run test -p dartium,firefox'], {'cwd': 'dist/dart/angular2_test'}));
+
 // -----------------
 // Pre-test checks
 
