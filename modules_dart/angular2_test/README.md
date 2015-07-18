@@ -10,14 +10,11 @@ angular2 in dart linked in some other way. Then:
 ```
 cd modules_dart/angular2_test
 pub get
-pub run test test/dart_test.dart -p dartium
-pub run test test/dart_test_with_lib.dart -p dartium
-
+pub run test -p dartium
 ```
 
 Run compiled with
 
 ```
-pub run test test/dart_test.dart -p chrome
-pub run test test/dart_test_with_lib.dart -p chrome
+pub run test -p chrome
 ```
