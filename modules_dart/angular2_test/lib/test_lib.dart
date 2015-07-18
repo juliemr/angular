@@ -1,11 +1,7 @@
 library test_lib.test_lib;
 
 import 'package:test/test.dart' as dartTest;
-export 'package:test/test.dart'
-    hide
-        setUp,
-        test,
-        tearDown;
+export 'package:test/test.dart' hide setUp, test, tearDown;
 
 import 'dart:async';
 
@@ -36,8 +32,7 @@ void initAngularTests() {
     _injector = createTestInjector(_testBindings);
   });
 
-  dartTest.tearDown(() {
-  });
+  dartTest.tearDown(() {});
 }
 
 /**
@@ -66,11 +61,10 @@ void setUp(fn) {
   });
 }
 
-void test(String description, fn, {String testOn, Timeout timeout,
-        skip, Map<String, dynamic> onPlatform}) {
+void test(String description, fn,
+    {String testOn, Timeout timeout, skip, Map<String, dynamic> onPlatform}) {
   if (fn is! FunctionWithParamTokens) fn = new FunctionWithParamTokens([], fn);
   dartTest.test(description, () {
     return fn.execute(_injector);
-  }, testOn: testOn, timeout: timeout,
-        skip: skip, onPlatform: onPlatform);
+  }, testOn: testOn, timeout: timeout, skip: skip, onPlatform: onPlatform);
 }

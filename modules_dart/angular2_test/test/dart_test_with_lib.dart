@@ -27,7 +27,8 @@ void main() {
     expect(string.split(","), equals(["foo", "bar", "baz"]));
   });
 
-  test("create a component using the TCB", inject([TestComponentBuilder], (TestComponentBuilder tcb) async {
+  test("create a component using the TCB", inject([TestComponentBuilder],
+      (TestComponentBuilder tcb) async {
     var rootTC = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
         .createAsync(TestComponent);
@@ -36,7 +37,8 @@ void main() {
     expect(rootTC.nativeElement.text, equals("1;2;"));
   }));
 
-  test("should reflect added elements", inject([TestComponentBuilder], (TestComponentBuilder tcb) async {
+  test("should reflect added elements", inject([TestComponentBuilder],
+      (TestComponentBuilder tcb) async {
     var rootTC = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
         .createAsync(TestComponent);
