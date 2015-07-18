@@ -4,7 +4,7 @@ components and injectables, backed by the `dart:test` library.
 At the moment, this shows an example of a test without the helpers - `dart_test.dart`,
 and a test with the helpers - `dart_test_with_lib.dart`.
 
-To run, you must have run `gulp build.dart` or have a compiled version of 
+To run, you must have run `gulp build.dart` or have a compiled version of
 angular2 in dart linked in some other way. Then:
 
 ```
