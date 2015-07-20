@@ -1,31 +1,19 @@
 library test_lib.test_lib;
 
-import 'package:test/test.dart' as dartTest;
-export 'package:test/test.dart'
-    hide
-        setUp,
-        test,
-        tearDown;
-
-import 'dart:async';
-
-import 'package:angular2/src/dom/dom_adapter.dart' show DOM;
+import 'package:angular2/src/di/injector.dart' show Injector;
 import 'package:angular2/src/dom/browser_adapter.dart' show BrowserDomAdapter;
-
+import 'package:angular2/src/facade/collection.dart' show StringMapWrapper;
 import 'package:angular2/src/reflection/reflection.dart';
 import 'package:angular2/src/reflection/reflection_capabilities.dart';
-
-import 'package:angular2/src/di/binding.dart' show bind;
-import 'package:angular2/src/di/injector.dart' show Injector;
-import 'package:angular2/src/facade/collection.dart' show StringMapWrapper;
-
 import 'package:angular2/src/test_lib/test_injector.dart';
-export 'package:angular2/src/test_lib/test_injector.dart' show inject;
+import 'package:test/test.dart' as dartTest;
+
 export 'package:angular2/src/test_lib/test_component_builder.dart';
+export 'package:angular2/src/test_lib/test_injector.dart' show inject;
+export 'package:test/test.dart' hide setUp, test, tearDown;
 
 List _testBindings = [];
 Injector _injector;
-bool _inIt = false;
 
 void initAngularTests() {
   BrowserDomAdapter.makeCurrent();
@@ -36,8 +24,7 @@ void initAngularTests() {
     _injector = createTestInjector(_testBindings);
   });
 
-  dartTest.tearDown(() {
-  });
+  dartTest.tearDown(() {});
 }
 
 /**
@@ -66,11 +53,10 @@ void setUp(fn) {
   });
 }
 
-void test(String description, fn, {String testOn, Timeout timeout,
-        skip, Map<String, dynamic> onPlatform}) {
+void test(String description, fn, {String testOn, dartTest.Timeout timeout,
+    skip, Map<String, dynamic> onPlatform}) {
   if (fn is! FunctionWithParamTokens) fn = new FunctionWithParamTokens([], fn);
   dartTest.test(description, () {
     return fn.execute(_injector);
-  }, testOn: testOn, timeout: timeout,
-        skip: skip, onPlatform: onPlatform);
+  }, testOn: testOn, timeout: timeout, skip: skip, onPlatform: onPlatform);
 }
