@@ -144,17 +144,20 @@ export class AbstractControl {
 export class Control extends AbstractControl {
   _onChange: Function;
 
-  constructor(value: any, validator: Function = Validators.nullValidator) {
+  constructor(value: any = null, validator: Function = Validators.nullValidator) {
     super(validator);
     this._value = value;
     this.updateValidity({onlySelf: true});
     this._valueChanges = new EventEmitter();
   }
 
-  updateValue(value: any, {onlySelf, emitEvent}: {onlySelf?: boolean, emitEvent?: boolean} = {}):
+  updateValue(value: any,
+              {onlySelf, emitEvent, emitModelToViewChange}:
+                  {onlySelf?: boolean, emitEvent?: boolean, emitModelToViewChange?: boolean} = {}):
       void {
+    emitModelToViewChange = isPresent(emitModelToViewChange) ? emitModelToViewChange : true;
     this._value = value;
-    if (isPresent(this._onChange)) this._onChange(this._value);
+    if (isPresent(this._onChange) && emitModelToViewChange) this._onChange(this._value);
     this.updateValueAndValidity({onlySelf: onlySelf, emitEvent: emitEvent});
   }
 

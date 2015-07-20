@@ -93,7 +93,10 @@ class CreateNgDepsVisitor extends Object with SimpleAstVisitor<Object> {
   void _maybeWriteImport() {
     if (_wroteBaseLibImport) return;
     _wroteBaseLibImport = true;
-    writer.print('''import '${path.basename(assetId.path)}';''');
+    var origDartFile = path.basename(assetId.path);
+    writer.print('''import '$origDartFile';''');
+    writer.print('''export '$origDartFile';''');
+    writer.print("import '$_REFLECTOR_IMPORT' as $_REF_PREFIX;");
   }
 
   void _updateUsesNonLangLibs(UriBasedDirective directive) {
@@ -105,6 +108,11 @@ class CreateNgDepsVisitor extends Object with SimpleAstVisitor<Object> {
   Object visitImportDirective(ImportDirective node) {
     _maybeWriteImport();
     _updateUsesNonLangLibs(node);
+    // Ignore deferred imports here so as to not load the deferred libraries
+    // code in the current library causing much of the code to not be
+    // deferred. Instead `DeferredRewriter` will rewrite the code as to load
+    // `ng_deps` in a deferred way.
+    if (node.deferredKeyword != null) return null;
     return node.accept(_copyVisitor);
   }
 
@@ -118,7 +126,7 @@ class CreateNgDepsVisitor extends Object with SimpleAstVisitor<Object> {
   void _openFunctionWrapper() {
     _maybeWriteImport();
     writer.print('var _visited = false;'
-        'void ${SETUP_METHOD_NAME}(${REFLECTOR_VAR_NAME}) {'
+        'void ${SETUP_METHOD_NAME}() {'
         'if (_visited) return; _visited = true;');
   }
 
@@ -256,6 +264,9 @@ class CreateNgDepsVisitor extends Object with SimpleAstVisitor<Object> {
     _foundNgInjectable = true;
 
     // The receiver for cascaded calls.
-    writer.print(REFLECTOR_VAR_NAME);
+    writer.print('$_REF_PREFIX.$REFLECTOR_VAR_NAME');
   }
 }
+
+const _REF_PREFIX = '_ngRef';
+const _REFLECTOR_IMPORT = 'package:angular2/src/reflection/reflection.dart';
