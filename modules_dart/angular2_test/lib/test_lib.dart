@@ -12,7 +12,7 @@ export 'package:angular2/src/test_lib/test_component_builder.dart';
 export 'package:angular2/src/test_lib/test_injector.dart' show inject;
 export 'package:test/test.dart' hide setUp, test, tearDown;
 
-List _testBindings = [];
+final List _testBindings = [];
 Injector _injector;
 
 void initAngularTests() {
@@ -39,7 +39,7 @@ void initAngularTests() {
  *     bind(SomeToken).toValue(myValue),
  *   ]);
  */
-void setUpBindings(Function fn) {
+void setUpBindings(List fn()) {
   dartTest.setUp(() {
     var bindings = fn();
     if (bindings != null) _testBindings.addAll(bindings);
