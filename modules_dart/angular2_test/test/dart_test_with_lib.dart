@@ -4,6 +4,7 @@
 import "package:angular2/angular2.dart"
     show Component, View, NgFor, Injector, Key;
 
+import 'package:test/test.dart';
 import "package:angular2_test/test_lib.dart";
 
 // This is the component we will be testing.
@@ -27,7 +28,7 @@ void main() {
     expect(string.split(","), equals(["foo", "bar", "baz"]));
   });
 
-  test("create a component using the TCB", inject([TestComponentBuilder],
+  ngTest("create a component using the TCB", inject([TestComponentBuilder],
       (TestComponentBuilder tcb) async {
     var rootTC = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
@@ -37,7 +38,7 @@ void main() {
     expect(rootTC.nativeElement.text, equals("1;2;"));
   }));
 
-  test("should reflect added elements", inject([TestComponentBuilder],
+  ngTest("should reflect added elements", inject([TestComponentBuilder],
       (TestComponentBuilder tcb) async {
     var rootTC = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
