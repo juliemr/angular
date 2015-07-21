@@ -1,30 +1,21 @@
 library test_lib.test_lib;
 
-import 'package:angular2/src/di/injector.dart' show Injector;
 import 'package:angular2/src/dom/browser_adapter.dart' show BrowserDomAdapter;
 import 'package:angular2/src/facade/collection.dart' show StringMapWrapper;
 import 'package:angular2/src/reflection/reflection.dart';
 import 'package:angular2/src/reflection/reflection_capabilities.dart';
 import 'package:angular2/src/test_lib/test_injector.dart';
-import 'package:test/test.dart' as dartTest;
+import 'package:test/test.dart';
+
+import 'package:test/src/backend/invoker.dart';
+import 'package:test/src/backend/live_test.dart';
 
 export 'package:angular2/src/test_lib/test_component_builder.dart';
 export 'package:angular2/src/test_lib/test_injector.dart' show inject;
-export 'package:test/test.dart' hide setUp, test, tearDown;
-
-final List _testBindings = [];
-Injector _injector;
 
 void initAngularTests() {
   BrowserDomAdapter.makeCurrent();
   reflector.reflectionCapabilities = new ReflectionCapabilities();
-
-  dartTest.setUp(() {
-    _testBindings.clear();
-    _injector = createTestInjector(_testBindings);
-  });
-
-  dartTest.tearDown(() {});
 }
 
 /**
@@ -39,24 +30,72 @@ void initAngularTests() {
  *     bind(SomeToken).toValue(myValue),
  *   ]);
  */
-void setUpBindings(List fn()) {
-  dartTest.setUp(() {
-    var bindings = fn();
-    if (bindings != null) _testBindings.addAll(bindings);
-  });
+void setUpBindings(BindingListFactory factory) {
+  _currentTestBindings.add(factory);
 }
 
-void setUp(fn) {
+void ngSetUp(fn) {
   if (fn is! FunctionWithParamTokens) fn = new FunctionWithParamTokens([], fn);
-  dartTest.setUp(() {
-    fn.execute(_injector);
-  });
+
+  _currentTestInjectorSetups.add(fn);
 }
 
-void test(String description, fn, {String testOn, dartTest.Timeout timeout,
+void ngTest(String description, fn, {String testOn, Timeout timeout,
     skip, Map<String, dynamic> onPlatform}) {
-  if (fn is! FunctionWithParamTokens) fn = new FunctionWithParamTokens([], fn);
-  dartTest.test(description, () {
-    return fn.execute(_injector);
+  test(description, () async {
+    try {
+      // TODO: maybe special-case this guy so we know it is the actual
+      // test function and not just another ngSetUp call if it fails
+      ngSetUp(fn);
+
+      var bindings = [];
+
+      for (BindingListFactory factory in _currentTestBindings) {
+        // TODO: consider try/catching these and printing out that it was
+        // an error during factory construction
+        bindings.addAll(await factory());
+      }
+
+      var injector = createTestInjector(bindings);
+
+      for (FunctionWithParamTokens func in _currentTestInjectorSetups) {
+        // TODO: consider try/catching these and printing out that it was
+        // an error during injector setups
+        await func.execute(injector);
+      }
+    } finally {
+      // TODO: uh - maybe - should be okay - maybe tearDown?
+      _injectorSetupsExpando[_currentTest] = null;
+      _listExpando[_currentTest] = null;
+    }
   }, testOn: testOn, timeout: timeout, skip: skip, onPlatform: onPlatform);
 }
+
+typedef List<dynamic> BindingListFactory();
+
+List<BindingListFactory> get _currentTestBindings {
+  var list = _listExpando[_currentTest ];
+
+  if (list == null) {
+    list = _listExpando[_currentTest ] = <BindingListFactory>[];
+  }
+
+  return list;
+}
+
+final _listExpando = new Expando<List<BindingListFactory>>();
+
+List<FunctionWithParamTokens> get _currentTestInjectorSetups{
+  var list = _injectorSetupsExpando[_currentTest ];
+
+  if (list == null) {
+    list = _injectorSetupsExpando[_currentTest ] = <FunctionWithParamTokens>[];
+  }
+
+  return list;
+}
+
+final _injectorSetupsExpando = new Expando<List<FunctionWithParamTokens>>();
+
+// TODO: warning - this is not a public API!!!
+LiveTest get _currentTest => Invoker.current.liveTest;
