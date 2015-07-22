@@ -26,9 +26,7 @@ void main() {
   initAngularTests();
 
   setUp(() {
-    setUpBindings(() => [
-      bind(MyToken).toValue('my string')
-    ]);
+    setUpBindings(() => [bind(MyToken).toValue('my string')]);
     ngSetUp(inject([MyToken], (token) {
       expect(token, equals('my string'));
     }));

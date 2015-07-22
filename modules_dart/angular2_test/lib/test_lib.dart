@@ -14,7 +14,6 @@ import 'package:test/src/backend/live_test.dart';
 export 'package:angular2/src/test_lib/test_component_builder.dart';
 export 'package:angular2/src/test_lib/test_injector.dart' show inject;
 
-
 /**
  * One time initialization that must be done for Angular2 component
  * tests. Call before any test methods.
@@ -74,8 +73,8 @@ void ngSetUp(fn) {
  *     expect(token, equals('expected'));
  *   }));
  */
-void ngTest(String description, fn, {String testOn, Timeout timeout,
-    skip, Map<String, dynamic> onPlatform}) {
+void ngTest(String description, fn,
+    {String testOn, Timeout timeout, skip, Map<String, dynamic> onPlatform}) {
   test(description, () async {
     try {
       // TODO: maybe special-case this guy so we know it is the actual
@@ -108,10 +107,10 @@ void ngTest(String description, fn, {String testOn, Timeout timeout,
 typedef List<dynamic> BindingListFactory();
 
 List<BindingListFactory> get _currentTestBindings {
-  var list = _listExpando[_currentTest ];
+  var list = _listExpando[_currentTest];
 
   if (list == null) {
-    list = _listExpando[_currentTest ] = <BindingListFactory>[];
+    list = _listExpando[_currentTest] = <BindingListFactory>[];
   }
 
   return list;
@@ -119,11 +118,11 @@ List<BindingListFactory> get _currentTestBindings {
 
 final _listExpando = new Expando<List<BindingListFactory>>();
 
-List<FunctionWithParamTokens> get _currentTestInjectorSetups{
-  var list = _injectorSetupsExpando[_currentTest ];
+List<FunctionWithParamTokens> get _currentTestInjectorSetups {
+  var list = _injectorSetupsExpando[_currentTest];
 
   if (list == null) {
-    list = _injectorSetupsExpando[_currentTest ] = <FunctionWithParamTokens>[];
+    list = _injectorSetupsExpando[_currentTest] = <FunctionWithParamTokens>[];
   }
 
   return list;
