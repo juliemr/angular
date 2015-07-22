@@ -2,7 +2,7 @@
 // browser. This means that it should be run with `-p dartium` or `-p chrome`.
 @TestOn("browser")
 import "package:angular2/angular2.dart"
-    show Component, View, NgFor, Injector, Key;
+    show Component, View, NgFor, Injector, Key, bind;
 
 import 'package:test/test.dart';
 import "package:angular2_test/test_lib.dart";
@@ -17,11 +17,27 @@ class TestComponent {
   }
 }
 
+class MyToken {}
+
 const TEMPLATE =
     "<div><copy-me template=\"ng-for #item of items\">{{item.toString()}};</copy-me></div>";
 
 void main() {
   initAngularTests();
+
+  setUp(() {
+    setUpBindings(() => [
+      bind(MyToken).toValue('my string')
+    ]);
+    ngSetUp(inject([MyToken], (token) {
+      expect(token, equals('my string'));
+    }));
+  });
+
+  ngTest("set up bindings are retained", inject([MyToken], (token) {
+    print(token);
+    expect(token, equals('my string'));
+  }));
 
   test("normal function", () {
     var string = "foo,bar,baz";
@@ -30,6 +46,7 @@ void main() {
 
   ngTest("create a component using the TCB", inject([TestComponentBuilder],
       (TestComponentBuilder tcb) async {
+    print('running');
     var rootTC = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
         .createAsync(TestComponent);

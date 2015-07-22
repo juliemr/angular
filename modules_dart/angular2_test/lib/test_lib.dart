@@ -1,5 +1,6 @@
 library test_lib.test_lib;
 
+import 'package:angular2/src/di/injector.dart' show Injector;
 import 'package:angular2/src/dom/browser_adapter.dart' show BrowserDomAdapter;
 import 'package:angular2/src/facade/collection.dart' show StringMapWrapper;
 import 'package:angular2/src/reflection/reflection.dart';
@@ -13,6 +14,18 @@ import 'package:test/src/backend/live_test.dart';
 export 'package:angular2/src/test_lib/test_component_builder.dart';
 export 'package:angular2/src/test_lib/test_injector.dart' show inject;
 
+
+/**
+ * One time initialization that must be done for Angular2 component
+ * tests. Call before any test methods.
+ * 
+ * Example:
+ * 
+ *   main() {
+ *     initAngularTests();
+ *     group(...);
+ *   }
+ */
 void initAngularTests() {
   BrowserDomAdapter.makeCurrent();
   reflector.reflectionCapabilities = new ReflectionCapabilities();
@@ -20,6 +33,7 @@ void initAngularTests() {
 
 /**
  * Allows overriding default bindings defined in test_injector.js.
+ * This may only be called within setUp
  *
  * The given function must return a list of DI bindings.
  *
@@ -34,12 +48,32 @@ void setUpBindings(BindingListFactory factory) {
   _currentTestBindings.add(factory);
 }
 
+/**
+ * Use the test injector to get bindings and run a function.
+ * 
+ * Example:
+ * 
+ *   setUp(() {
+ *     ngSetUp(inject([SomeToken], (token) {
+ *       token.init();
+ *     }));
+ *   });
+ */
 void ngSetUp(fn) {
   if (fn is! FunctionWithParamTokens) fn = new FunctionWithParamTokens([], fn);
 
   _currentTestInjectorSetups.add(fn);
 }
 
+/**
+ * Add a test which can use the test injector.
+ * 
+ * Example:
+ * 
+ *   ngTest(inject([SomeToken], (token) {
+ *     expect(token, equals('expected'));
+ *   }));
+ */
 void ngTest(String description, fn, {String testOn, Timeout timeout,
     skip, Map<String, dynamic> onPlatform}) {
   test(description, () async {
@@ -56,7 +90,7 @@ void ngTest(String description, fn, {String testOn, Timeout timeout,
         bindings.addAll(await factory());
       }
 
-      var injector = createTestInjector(bindings);
+      Injector injector = createTestInjector(bindings);
 
       for (FunctionWithParamTokens func in _currentTestInjectorSetups) {
         // TODO: consider try/catching these and printing out that it was
