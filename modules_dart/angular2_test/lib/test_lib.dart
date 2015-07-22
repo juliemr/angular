@@ -14,13 +14,12 @@ import 'package:test/src/backend/live_test.dart';
 export 'package:angular2/src/test_lib/test_component_builder.dart';
 export 'package:angular2/src/test_lib/test_injector.dart' show inject;
 
-
 /**
  * One time initialization that must be done for Angular2 component
  * tests. Call before any test methods.
- * 
+ *
  * Example:
- * 
+ *
  *   main() {
  *     initAngularTests();
  *     group(...);
@@ -50,9 +49,9 @@ void setUpBindings(BindingListFactory factory) {
 
 /**
  * Use the test injector to get bindings and run a function.
- * 
+ *
  * Example:
- * 
+ *
  *   setUp(() {
  *     ngSetUp(inject([SomeToken], (token) {
  *       token.init();
@@ -67,15 +66,15 @@ void ngSetUp(fn) {
 
 /**
  * Add a test which can use the test injector.
- * 
+ *
  * Example:
- * 
+ *
  *   ngTest(inject([SomeToken], (token) {
  *     expect(token, equals('expected'));
  *   }));
  */
-void ngTest(String description, fn, {String testOn, Timeout timeout,
-    skip, Map<String, dynamic> onPlatform}) {
+void ngTest(String description, fn,
+    {String testOn, Timeout timeout, skip, Map<String, dynamic> onPlatform}) {
   test(description, () async {
     try {
       // TODO: maybe special-case this guy so we know it is the actual
@@ -99,37 +98,33 @@ void ngTest(String description, fn, {String testOn, Timeout timeout,
       }
     } finally {
       // TODO: uh - maybe - should be okay - maybe tearDown?
-      _injectorSetupsExpando[_currentTest] = null;
-      _listExpando[_currentTest] = null;
+      _dataExpando[_currentTest] = null;
     }
   }, testOn: testOn, timeout: timeout, skip: skip, onPlatform: onPlatform);
 }
 
+class _NgTestData {
+  final List<BindingListFactory> factories = <BindingListFactory>[];
+  final List<FunctionWithParamTokens> injectors = <FunctionWithParamTokens>[];
+}
+
+_NgTestData get _data {
+  var data = _dataExpando[_currentTest];
+
+  if (data == null) {
+    data = _dataExpando[_currentTest] = new _NgTestData();
+  }
+
+  return data;
+}
+
+final _dataExpando = new Expando<_NgTestData>();
+
 typedef List<dynamic> BindingListFactory();
 
-List<BindingListFactory> get _currentTestBindings {
-  var list = _listExpando[_currentTest ];
+List<BindingListFactory> get _currentTestBindings => _data.factories;
 
-  if (list == null) {
-    list = _listExpando[_currentTest ] = <BindingListFactory>[];
-  }
-
-  return list;
-}
-
-final _listExpando = new Expando<List<BindingListFactory>>();
-
-List<FunctionWithParamTokens> get _currentTestInjectorSetups{
-  var list = _injectorSetupsExpando[_currentTest ];
-
-  if (list == null) {
-    list = _injectorSetupsExpando[_currentTest ] = <FunctionWithParamTokens>[];
-  }
-
-  return list;
-}
-
-final _injectorSetupsExpando = new Expando<List<FunctionWithParamTokens>>();
+List<FunctionWithParamTokens> get _currentTestInjectorSetups => _data.injectors;
 
 // TODO: warning - this is not a public API!!!
 LiveTest get _currentTest => Invoker.current.liveTest;

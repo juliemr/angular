@@ -150,7 +150,7 @@ var BENCHPRESS_BUNDLE_CONFIG = {
     'rx'
   ],
   dest: CONFIG.dest.benchpress_bundle
-}
+};
 
 // ------------
 // clean
@@ -245,6 +245,7 @@ gulp.task('build/analyze.dart', dartanalyzer(gulp, gulpPlugins, {
 
 // ------------
 // pubbuild
+// WARNING: this task is very slow (~15m as of July 2015)
 
 gulp.task('build/pubbuild.dart', pubbuild(gulp, gulpPlugins, {
   src: CONFIG.dest.dart,
@@ -275,17 +276,19 @@ gulp.task('enforce-format', function() {
 });
 
 gulp.task('lint', ['build.tools'], function() {
+  // Built-in rules are at
   // https://github.com/palantir/tslint#supported-rules
   var tslintConfig = {
     "rules": {
       "semicolon": true,
-      "requireReturnType": true
+      "requireReturnType": true,
+      "requireParameterType": true
     }
   };
 
   return gulp.src(['modules/angular2/src/**/*.ts', '!modules/angular2/src/test_lib/**'])
       .pipe(tslint({configuration: tslintConfig, rulesDirectory: 'dist/tools/tslint'}))
-      .pipe(tslint.report('prose'));
+      .pipe(tslint.report('prose', {emitError: true}));
 });
 
 // ------------
@@ -328,6 +331,17 @@ function jsServeDartJs() {
   })();
 }
 
+function proxyServeDart() {
+  return jsserve(gulp, gulpPlugins, {
+    port: 8002,
+    proxies: [
+      {route: '/examples', url: 'http://localhost:8004'},
+      {route: '/benchmarks_external', url: 'http://localhost:8008'},
+      {route: '/benchmarks', url: 'http://localhost:8006'}
+    ]
+  })();
+}
+
 // ------------------
 // web servers
 gulp.task('serve.js.dev', ['build.js.dev'], function(neverDone) {
@@ -349,19 +363,33 @@ gulp.task('serve.e2e.prod', ['build.js.prod', 'build.js.cjs', 'build.css.materia
 
 gulp.task('serve.js.dart2js', jsServeDartJs);
 
+gulp.task('!proxyServeDart', proxyServeDart);
+
+gulp.task('serve.dart', function(done) {
+  runSequence([
+    '!proxyServeDart',
+    'serve/examples.dart',
+    'serve/benchmarks.dart',
+    'serve/benchmarks_external.dart'
+  ], done);
+});
+
 gulp.task('serve/examples.dart', pubserve(gulp, gulpPlugins, {
   command: DART_SDK.PUB,
-  path: CONFIG.dest.dart + '/examples'
+  path: CONFIG.dest.dart + '/examples',
+  port: 8004
 }));
 
 gulp.task('serve/benchmarks.dart', pubserve(gulp, gulpPlugins, {
   command: DART_SDK.PUB,
-  path: CONFIG.dest.dart + '/benchmarks'
+  path: CONFIG.dest.dart + '/benchmarks',
+  port: 8006
 }));
 
 gulp.task('serve/benchmarks_external.dart', pubserve(gulp, gulpPlugins, {
   command: DART_SDK.PUB,
-  path: CONFIG.dest.dart + '/benchmarks_external'
+  path: CONFIG.dest.dart + '/benchmarks_external',
+  port: 8008
 }));
 
 // --------------
@@ -751,7 +779,6 @@ gulp.task('build.dart', function(done) {
     'build/packages.dart',
     'build/pubspec.dart',
     'build/analyze.dart',
-    'build/pubbuild.dart',
     'build.dart.material.css',
     sequenceComplete(done)
   );
