@@ -19,8 +19,8 @@ var _global: jasmine.GlobalPolluter = <any>(typeof window === 'undefined' ? glob
 export var afterEach: Function = _global.afterEach;
 
 export type SyncTestFn = () => void;
-type AsyncTestFn = (done: () => void) => void;
-type AnyTestFn = SyncTestFn | AsyncTestFn;
+export type AsyncTestFn = (done: () => void) => void;
+export type AnyTestFn = SyncTestFn | AsyncTestFn;
 
 export interface NgMatchers extends jasmine.Matchers {
   toBe(expected: any): boolean;
@@ -51,65 +51,20 @@ var jsmIt = _global.it;
 var jsmIIt = _global.fit;
 var jsmXIt = _global.xit;
 
-var runnerStack = [];
-var inIt = false;
 var globalTimeOut = browserDetection.isSlow ? 3000 : jasmine.DEFAULT_TIMEOUT_INTERVAL;
 
 var testBindings;
-
-/**
- * Mechanism to run `beforeEach()` functions of Angular tests.
- *
- * Note: Jasmine own `beforeEach` is used by this library to handle DI bindings.
- */
-class BeforeEachRunner {
-  private _fns: Array<FunctionWithParamTokens | SyncTestFn> = [];
-
-  constructor(private _parent: BeforeEachRunner) {}
-
-  beforeEach(fn: FunctionWithParamTokens | SyncTestFn): void { this._fns.push(fn); }
-
-  run(injector): void {
-    if (this._parent) this._parent.run(injector);
-    this._fns.forEach((fn) => {
-      return isFunction(fn) ? (<SyncTestFn>fn)() : (<FunctionWithParamTokens>fn).execute(injector);
-    });
-  }
-}
+var injector;
 
 // Reset the test bindings before each test
-jsmBeforeEach(() => { testBindings = []; });
+jsmBeforeEach(() => {
+  testBindings = [];
+  injector = null;
+});
 
-function _describe(jsmFn, ...args) {
-  var parentRunner = runnerStack.length === 0 ? null : runnerStack[runnerStack.length - 1];
-  var runner = new BeforeEachRunner(parentRunner);
-  runnerStack.push(runner);
-  var suite = jsmFn(...args);
-  runnerStack.pop();
-  return suite;
-}
-
-export function describe(...args): void {
-  return _describe(jsmDescribe, ...args);
-}
-
-export function ddescribe(...args): void {
-  return _describe(jsmDDescribe, ...args);
-}
-
-export function xdescribe(...args): void {
-  return _describe(jsmXDescribe, ...args);
-}
-
-export function beforeEach(fn: FunctionWithParamTokens | SyncTestFn): void {
-  if (runnerStack.length > 0) {
-    // Inside a describe block, beforeEach() uses a BeforeEachRunner
-    runnerStack[runnerStack.length - 1].beforeEach(fn);
-  } else {
-    // Top level beforeEach() are delegated to jasmine
-    jsmBeforeEach(<SyncTestFn>fn);
-  }
-}
+export var describe: Function = jsmDescribe;
+export var ddescribe: Function = jsmDDescribe;
+export var xdescribe: Function = jsmXDescribe;
 
 /**
  * Allows overriding default bindings defined in test_injector.js.
@@ -128,59 +83,80 @@ export function beforeEachBindings(fn): void {
     var bindings = fn();
     if (!bindings) return;
     testBindings = [...testBindings, ...bindings];
+    // TODO - warn if we're trying to use an injector, set it to null,
+    // then use it again?
+    injector = null;
+    // if (injector !== null) complain
   });
 }
 
 function _it(jsmFn: Function, name: string, testFn: FunctionWithParamTokens | AnyTestFn,
              testTimeOut: number): void {
-  var runner = runnerStack[runnerStack.length - 1];
   var timeOut = Math.max(globalTimeOut, testTimeOut);
 
   if (testFn instanceof FunctionWithParamTokens) {
-    // The test case uses inject(). ie `it('test', inject([AsyncTestCompleter], (async) => { ...
+    // The test case uses inject(). ie `it('test', inject([ClassA], (a) => { ...
     // }));`
-
-    if (testFn.hasToken(AsyncTestCompleter)) {
+    if (testFn.isAsync()) {
       jsmFn(name, (done) => {
-        var completerBinding =
-            bind(AsyncTestCompleter)
-                .toFactory(() => {
-                  // Mark the test as async when an AsyncTestCompleter is injected in an it()
-                  if (!inIt)
-                    throw new Error('AsyncTestCompleter can only be injected in an "it()"');
-                  return new AsyncTestCompleter(done);
-                });
-
-        var injector = createTestInjector([...testBindings, completerBinding]);
-        runner.run(injector);
-
-        inIt = true;
-        testFn.execute(injector);
-        inIt = false;
+        if (!injector) {
+          injector = createTestInjector(testBindings);
+        }
+        testFn.executeAsync(injector, done);
       }, timeOut);
     } else {
       jsmFn(name, () => {
-        var injector = createTestInjector(testBindings);
-        runner.run(injector);
+        if (!injector) {
+          injector = createTestInjector(testBindings);
+        }
         testFn.execute(injector);
       }, timeOut);
     }
-
   } else {
     // The test case doesn't use inject(). ie `it('test', (done) => { ... }));`
-
     if ((<any>testFn).length === 0) {
       jsmFn(name, () => {
-        var injector = createTestInjector(testBindings);
-        runner.run(injector);
         (<SyncTestFn>testFn)();
       }, timeOut);
     } else {
       jsmFn(name, (done) => {
-        var injector = createTestInjector(testBindings);
-        runner.run(injector);
         (<AsyncTestFn>testFn)(done);
       }, timeOut);
+    }
+  }
+}
+
+
+export function beforeEach(fn: FunctionWithParamTokens | AnyTestFn): void {
+  if (fn instanceof FunctionWithParamTokens) {
+    // The test case uses inject(). ie `beforeEach(inject([ClassA], (a) => { ...
+    // }));`
+    if (fn.isAsync()) {
+      jsmBeforeEach((done) => {
+        if (!injector) {
+          injector = createTestInjector(testBindings);
+        }
+        fn.executeAsync(injector, done);
+      });
+    } else {
+      jsmBeforeEach(() => {
+        if (!injector) {
+          injector = createTestInjector(testBindings);
+        }
+        fn.execute(injector);
+      });
+    }
+  } else {
+    // The test case doesn't use inject(). ie `beforeEach((done) => { ... }));`
+
+    if ((<any>fn).length === 0) {
+      jsmBeforeEach(() => {
+        (<SyncTestFn>fn)();
+      });
+    } else {
+      jsmBeforeEach((done) => {
+        (<AsyncTestFn>fn)(done);
+      });
     }
   }
 }

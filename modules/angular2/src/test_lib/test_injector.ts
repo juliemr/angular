@@ -166,6 +166,22 @@ export class FunctionWithParamTokens {
   constructor(private _tokens: any[], private _fn: Function) {}
 
   /**
+   * Whether an extra param is expected (i.e. it's async)
+   */
+  isAsync(): boolean {
+    return this._tokens.length !== this._fn.length;
+  }
+
+  /**
+   * Returns the value of the executed function.
+   */
+  executeAsync(injector: Injector, done: Function): any {
+    var params = this._tokens.map(t => injector.get(t));
+    params.push(done);
+    return FunctionWrapper.apply(this._fn, params);
+  }
+
+  /**
    * Returns the value of the executed function.
    */
   execute(injector: Injector): any {
