@@ -4,7 +4,8 @@ import {AnimationBuilder} from 'angular2/src/animate/animation_builder';
 import {MockAnimationBuilder} from 'angular2/src/mock/animation_builder_mock';
 
 import {ProtoViewFactory} from 'angular2/src/core/linker/proto_view_factory';
-import {Reflector, reflector} from 'angular2/src/core/reflection/reflection';
+import {Reflector} from 'angular2/src/core/reflection/reflection';
+import {ReflectionCapabilities} from 'angular2/src/core/reflection/reflection_capabilities';
 import {
   IterableDiffers,
   defaultIterableDiffers,
@@ -68,7 +69,7 @@ import {compilerBindings} from 'angular2/src/core/compiler/compiler';
 function _getRootBindings() {
   return [
     bind(Reflector)
-        .toValue(reflector),
+        .toValue(new Reflector(new ReflectionCapabilities())),
   ];
 }
 
@@ -169,7 +170,8 @@ export class FunctionWithParamTokens {
    * Whether an extra param is expected (i.e. it's async)
    */
   isAsync(): boolean {
-    return this._tokens.length !== this._fn.length;
+    var reflector = new Reflector(new ReflectionCapabilities());
+    return this._tokens.length !== reflector.parameters(this._fn).length;
   }
 
   /**

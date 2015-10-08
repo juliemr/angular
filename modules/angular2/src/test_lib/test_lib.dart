@@ -53,16 +53,8 @@ void testSetup() {
     _testBindings.clear();
   }, priority: 3);
 
-  var completerBinding = bind(AsyncTestCompleter).toFactory(() {
-    // Mark the test as async when an AsyncTestCompleter is injected in an it(),
-    if (!_inIt) throw 'AsyncTestCompleter can only be injected in an "it()"';
-    _isCurrentTestAsync = true;
-    return new AsyncTestCompleter();
-  });
-
   gns.beforeEach(() {
     _isCurrentTestAsync = false;
-    _testBindings.add(completerBinding);
     _injector = createTestInjector(_testBindings);
   }, priority: 1);
 }
@@ -163,6 +155,7 @@ void beforeEach(fn) {
  *   ]);
  */
 void beforeEachBindings(Function fn) {
+  // TODO: check if _injector is null?
   gns.beforeEach(() {
     var bindings = fn();
     if (bindings != null) _testBindings.addAll(bindings);
@@ -171,12 +164,18 @@ void beforeEachBindings(Function fn) {
 
 void _it(gnsFn, name, fn) {
   if (fn is! FunctionWithParamTokens) fn = new FunctionWithParamTokens([], fn);
-  gnsFn(name, () {
-    _inIt = true;
-    fn.execute(_injector);
-    _inIt = false;
-    if (_isCurrentTestAsync) return _injector.get(AsyncTestCompleter).future;
-  });
+  if (fn.isAsync()) {
+    gnsFn(name, () {
+      var completer = new AsyncTestCompleter();
+      fn.executeAsync(_injector, completer.done);
+      return completer.future;
+    });
+  } else {
+    gnsFn(name, () {
+      fn.execute(_injector);
+    });
+  }
+    // if (_isCurrentTestAsync) return _injector.get(AsyncTestCompleter).future;
 }
 
 void it(name, fn, [timeOut = null]) {
