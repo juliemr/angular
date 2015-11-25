@@ -36,11 +36,11 @@ void main() {
 
   setUpProviders(() => [TestService]);
 
-  ngSetUp([TestService], (TestService service) {
+  ngSetUp((TestService service) {
     service.init();
   });
 
-  ngTest("should create a component using the TestComponentBuilder", [TestComponentBuilder],
+  ngTest("should create a component using the TestComponentBuilder",
       (TestComponentBuilder tcb) async {
     var fixture = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
@@ -50,7 +50,7 @@ void main() {
     expect(fixture.debugElement.nativeElement.text, equals("1;2;"));
   });
 
-  ngTest("should reflect added elements", [TestComponentBuilder],
+  ngTest("should reflect added elements",
       (TestComponentBuilder tcb) async {
     var fixture = await tcb
         .overrideTemplate(TestComponent, TEMPLATE)
@@ -63,7 +63,7 @@ void main() {
     expect(fixture.debugElement.nativeElement.text, equals("1;2;3;"));
   });
 
-  ngTest("should use the service providers from ngSetUp", [TestService],
+  ngTest("should use the service providers from ngSetUp",
       (TestService service) async {
     expect(service.status, equals('ready'));
   });

@@ -54,7 +54,16 @@ void setUpProviders(providerFactory) {
 }
 
 
-dynamic _runInjectableFunction(List<dynamic> tokens, fn) {
+dynamic _runInjectableFunction(fn) {
+  var params = reflector.parameters(fn);
+  List<dynamic> tokens = <dynamic>[];
+  for (var param in params) {
+    for (var annotation in param) {
+      // TODO - do some basic type checking here. Make sure it's not untyped. Etc.
+      tokens.add(annotation);
+    }
+  }
+
   if (_currentInjector == null) {
     _currentInjector = createTestInjector(_currentTestProviders);
   }
@@ -67,13 +76,13 @@ dynamic _runInjectableFunction(List<dynamic> tokens, fn) {
  *
  * Example:
  *
- *   ngSetUp([SomeToken], (token) {
+ *   ngSetUp((SomeToken token) {
  *     token.init();
  *   });
  */
-void ngSetUp(List<dynamic> tokens, fn) {
+void ngSetUp(fn) {
   setUp(() async {
-    await _runInjectableFunction(tokens, fn);
+    await _runInjectableFunction(fn);
   });
 }
 
@@ -82,14 +91,14 @@ void ngSetUp(List<dynamic> tokens, fn) {
  *
  * Example:
  *
- *   ngTest("description", [SomeToken], (token) {
+ *   ngTest("description", (SomeToken token) {
  *     expect(token, equals('expected'));
  *   });
  */
-void ngTest(String description, List<dynamic> tokens, fn,
+void ngTest(String description, fn,
     {String testOn, Timeout timeout, skip, Map<String, dynamic> onPlatform}) {
   test(description, () async {
-    await _runInjectableFunction(tokens, fn);
+    await _runInjectableFunction(fn);
   }, testOn: testOn, timeout: timeout, skip: skip, onPlatform: onPlatform);
 }
 
