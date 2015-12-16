@@ -57,7 +57,10 @@ import {
 } from 'angular2/src/web_workers/shared/service_message_broker';
 import {WebWorkerEventDispatcher} from 'angular2/src/web_workers/worker/event_dispatcher';
 import {ChangeDetectorGenConfig} from 'angular2/src/core/change_detection/change_detection';
-
+import {
+  TEST_BROWSER_PLATFORM_PROVIDERS,
+  TEST_BROWSER_APPLICATION_PROVIDERS
+} from 'angular2/platform/testing/browser';
 
 export function main() {
   function createWebWorkerBrokerFactory(
@@ -102,14 +105,17 @@ export function main() {
     beforeEachProviders(() => {
       var uiRenderProtoViewStore = new RenderProtoViewRefStore(false);
       uiRenderViewStore = new RenderViewWithFragmentsStore(false);
-      var testInjector = new TestInjector();
-      testInjector.addProviders([
+      var testUiInjector = new TestInjector();
+      testUiInjector.platformProviders = TEST_BROWSER_PLATFORM_PROVIDERS;
+      testUiInjector.applicationProviders = TEST_BROWSER_APPLICATION_PROVIDERS;
+      testUiInjector.addProviders([
+        Serializer,
         provide(RenderProtoViewRefStore, {useValue: uiRenderProtoViewStore}),
         provide(RenderViewWithFragmentsStore, {useValue: uiRenderViewStore}),
         provide(DomRenderer, {useClass: DomRenderer_}),
         provide(Renderer, {useExisting: DomRenderer})
       ]);
-      uiInjector = testInjector.createInjector();
+      uiInjector = testUiInjector.createInjector();
       var uiSerializer = uiInjector.get(Serializer);
       var domRenderer = uiInjector.get(DomRenderer);
       var workerRenderProtoViewStore = new RenderProtoViewRefStore(true);

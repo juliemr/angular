@@ -32,6 +32,7 @@ export function main() {
   const ID = "methodId";
 
   beforeEachProviders(() => [
+    Serializer,
     provide(ON_WEB_WORKER, {useValue: true}),
     RenderProtoViewRefStore,
     RenderViewWithFragmentsStore
