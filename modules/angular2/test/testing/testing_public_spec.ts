@@ -94,6 +94,13 @@ class TestViewProvidersComp {
   constructor(private fancyService: FancyService) {}
 }
 
+@Component({selector: 'list-component'})
+@View({template: `<span *ngFor="#item of list">{{item}}</span>`, directives: []})
+class ListComp {
+  list: Array<string> = ['ten', 'nine', 'eight'];
+}
+
+
 
 export function main() {
   describe('angular2 jasmine matchers', () => {
@@ -346,6 +353,16 @@ export function main() {
            componentFixture.debugElement.componentInstance.showMore = true;
            componentFixture.detectChanges();
            expect(componentFixture.debugElement.nativeElement).toHaveText('MyIf(More)');
+         });
+       }));
+
+    it('should instantiate a component using default platform directives',
+       injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
+
+         return tcb.createAsync(ListComp).then((fixture) => {
+           fixture.detectChanges();
+
+           expect(fixture.debugElement.nativeElement).toHaveText('tennineeight');
          });
        }));
 
