@@ -94,6 +94,11 @@ class TestViewProvidersComp {
   constructor(private fancyService: FancyService) {}
 }
 
+@Component({selector: 'external-template-comp'})
+@View({templateUrl: 'templates/test.html'})
+class ExternalTemplateComp {
+}
+
 
 export function main() {
   describe('angular2 jasmine matchers', () => {
@@ -325,7 +330,7 @@ export function main() {
     });
   });
 
-  describe('test component builder', function() {
+  ddescribe('test component builder', function() {
     it('should instantiate a component with valid DOM',
        injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
 
@@ -426,6 +431,18 @@ export function main() {
                componentFixture.detectChanges();
                expect(componentFixture.debugElement.nativeElement)
                    .toHaveText('injected value: mocked out value');
+             });
+       }));
+
+    it('should allow an external templateUrl',
+       injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
+
+         return tcb
+             .createAsync(ExternalTemplateComp)
+             .then((componentFixture) => {
+               componentFixture.detectChanges();
+               expect(componentFixture.debugElement.nativeElement)
+                   .toHaveText('from external templatexx');
              });
        }));
   });
