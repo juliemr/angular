@@ -135,10 +135,12 @@ function runInTestZone(fnToExecute, finishCallback, failCallback): any {
                          onError: function(e) { failCallback(e); },
                          '$run': function(parentRun) {
                            return function() {
+                             console.log('------- zone $run');
                              try {
                                return parentRun.apply(this, arguments);
                              } finally {
                                if (pendingMicrotasks == 0 && pendingTimeouts.length == 0) {
+                                 console.log('------- zone $run had no pending tasks');
                                  finishCallback();
                                }
                              }

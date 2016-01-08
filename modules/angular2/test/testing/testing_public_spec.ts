@@ -96,6 +96,44 @@ class TestViewProvidersComp {
 
 
 export function main() {
+  ddescribe('injectAsync potential failures', () => {
+    it('should fail here 1',
+       injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
+         console.log('here1.1');
+         var deferred = PromiseWrapper.completer();
+         return deferred.promise.then(() => {
+           console.log('here1.2');
+           expect(1).toEqual(2);
+         });
+       }));
+
+    it('should fail here 2',
+       injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
+         console.log('here2.1');
+         return tcb.createAsync(ChildComp).then((componentFixture) => {
+           console.log('here2.2');
+           expect(11).toBe(22);
+         });
+       }));
+  });
+
+  ddescribe('injectAsync potential failures with beforeEach', () => {
+    let tcb;
+
+    beforeEach(inject([TestComponentBuilder], (builder: TestComponentBuilder) => {
+      tcb = builder;
+    }));
+
+    it('should fail here 3',
+       injectAsync([], () => {
+         console.log('here3.1');
+         return tcb.createAsync(ChildComp).then((componentFixture) => {
+           console.log('here3.2');
+           expect(111).toBe(222);
+         });
+       }));
+  });
+
   describe('angular2 jasmine matchers', () => {
     describe('toHaveCssClass', () => {
       it('should assert that the CSS class is present', () => {
@@ -330,6 +368,7 @@ export function main() {
        injectAsync([TestComponentBuilder], (tcb: TestComponentBuilder) => {
 
          return tcb.createAsync(ChildComp).then((componentFixture) => {
+           expect(1).toBe(2);
            componentFixture.detectChanges();
 
            expect(componentFixture.debugElement.nativeElement).toHaveText('Original Child');
