@@ -18,16 +18,25 @@ export function inspectNativeElement(element): DebugNode {
   return getDebugNode(element);
 }
 
-function _createRootRenderer(rootRenderer) {
+function _createConditionalRootRenderer(rootRenderer) {
   if (assertionsEnabled()) {
-    DOM.setGlobalVar(INSPECT_GLOBAL_NAME, inspectNativeElement);
-    return new DebugDomRootRenderer(rootRenderer);
+    return _createRootRenderer(rootRenderer);
   }
   return rootRenderer;
+}
+
+function _createRootRenderer(rootRenderer) {
+  DOM.setGlobalVar(INSPECT_GLOBAL_NAME, inspectNativeElement);
+  return new DebugDomRootRenderer(rootRenderer);
 }
 
 /**
  * Providers which support debugging Angular applications (e.g. via `ng.probe`).
  */
-export const ELEMENT_PROBE_PROVIDERS: any[] = CONST_EXPR(
+export const ELEMENT_PROBE_PROVIDERS: any[] = CONST_EXPR([
+  new Provider(RootRenderer,
+               {useFactory: _createConditionalRootRenderer, deps: [DomRootRenderer]})
+]);
+
+export const ELEMENT_PROBE_PROVIDERS_PROD_MODE: any[] = CONST_EXPR(
     [new Provider(RootRenderer, {useFactory: _createRootRenderer, deps: [DomRootRenderer]})]);

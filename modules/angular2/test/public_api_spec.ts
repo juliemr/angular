@@ -1617,6 +1617,7 @@ var NG_PLATFORM_BROWSER = [
   'By:js',
   'DOCUMENT',
   'ELEMENT_PROBE_PROVIDERS:js',
+  'ELEMENT_PROBE_PROVIDERS_PROD_MODE:js',
   'Title.getTitle():js',
   'Title.setTitle():js',
   'Title:js',

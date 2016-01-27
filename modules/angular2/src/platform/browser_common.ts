@@ -33,7 +33,12 @@ import {EventManager, EVENT_MANAGER_PLUGINS} from "angular2/src/platform/dom/eve
 import {ELEMENT_PROBE_PROVIDERS} from 'angular2/platform/common_dom';
 export {DOCUMENT} from 'angular2/src/platform/dom/dom_tokens';
 export {Title} from 'angular2/src/platform/browser/title';
-export {ELEMENT_PROBE_PROVIDERS, inspectNativeElement, By} from 'angular2/platform/common_dom';
+export {
+  ELEMENT_PROBE_PROVIDERS,
+  ELEMENT_PROBE_PROVIDERS_PROD_MODE,
+  inspectNativeElement,
+  By
+} from 'angular2/platform/common_dom';
 export {BrowserDomAdapter} from './browser/browser_adapter';
 export {enableDebugTools, disableDebugTools} from 'angular2/src/platform/browser/tools/tools';
 
