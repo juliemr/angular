@@ -25,7 +25,6 @@ var pubbuild = require('./tools/build/pubbuild');
 var jsserve = require('./tools/build/jsserve');
 var pubserve = require('./tools/build/pubserve');
 var pubtest = require('./tools/build/pubtest');
-var createTestMain = require('./tools/build/create_dart_test_main.js')
 var runServerDartTests = require('./tools/build/run_server_dart_tests');
 var util = require('./tools/build/util');
 var buildRouter = require('./modules/angular1_router/build');
@@ -635,13 +634,11 @@ gulp.task('buildRouter.dev', function() {
   buildRouter(modulesSrcDir, distDir);
 });
 
-gulp.task('!test.unit.dart/create-dart-test-main', createTestMain);
-
 gulp.task('test.unit.dart', function(done) {
   printModulesWarning();
   runSequence('build/tree.dart', 'build/pure-packages.dart', '!build/pubget.angular2.dart',
               '!build/change_detect.dart', '!build/remove-pub-symlinks',
-              '!test.unit.dart/create-dart-test-main', function(error) {
+              function(error) {
                 var watch = require('./tools/build/watch');
 
                 // if initial build failed (likely due to build or formatting step) then exit
@@ -860,8 +857,8 @@ gulp.task('!test.unit.dart/run/angular2', pubtest(gulp, gulpPlugins, {
             dir: path.join(CONFIG.dest.dart, 'angular2'),
             dartiumTmpdir: dartiumTmpdir,
             command: DART_SDK.PUB,
-            files: 'main_test.dart',
-            // files: '**/*_spec.dart',
+            files: '**/*_spec.dart',
+            bunchFiles: true,
             useExclusiveTests: true
           }));
 

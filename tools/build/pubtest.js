@@ -4,6 +4,7 @@ var glob = require('glob');
 var path = require('path');
 var fs = require('fs');
 var process = require('process');
+var createTestMain = require('./create_dart_test_main.js')
 
 function filterExclusiveTestFiles(files, dir) {
   return files.filter(function(file) {
@@ -21,18 +22,26 @@ module.exports = function(gulp, plugins, config) {
     var platform = config.platform || 'dartium';
     var pubArgs = ['run', 'test', '-p', platform];
     var env = process.env;
+    var exclusive = false;
     if (config.dartiumTmpdir) {
       env['PATH'] = env['PATH'] + ':' + config.dartiumTmpdir;
     }
 
     testFiles = glob.sync(path.join(config.files), {cwd: config.dir});
+
     if (config.useExclusiveTests) {
       var filtered = filterExclusiveTestFiles(testFiles, config.dir);
       if (filtered.length) {
+        exclusive = true;
         pubArgs.push('--tags');
         pubArgs.push('solo');
         testFiles = filtered;
       }
+    }
+
+    if (config.bunchFiles && !exclusive) {
+      var bigFile = createTestMain(config.dir, testFiles);
+      testFiles = [bigFile];
     }
 
     pubArgs = pubArgs.concat(testFiles);
