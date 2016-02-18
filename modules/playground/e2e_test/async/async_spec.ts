@@ -88,5 +88,16 @@ describe('async', () => {
     });
   });
 
+  it('should wait for a routing change', () => {
+    var routeChange = $('#routing');
+
+    expect(timeout.$('.val').getText()).toEqual('Old page');
+
+    routeChange.$('.action').click();
+
+    // whenStable should only be called after the route change finishes.
+    expect(timeout.$('.val').getText()).toEqual('New page');
+  });
+
   afterEach(verifyNoBrowserErrors);
 });
