@@ -1,7 +1,53 @@
 import {bootstrap} from 'angular2/bootstrap';
-import {Component, View} from 'angular2/core';
+import {Component, View, provide} from 'angular2/core';
 import {NgIf} from 'angular2/common';
 import {TimerWrapper} from 'angular2/src/facade/async';
+import {XHR} from 'angular2/src/compiler/xhr';
+import {
+  RouterLink,
+  RouteConfig,
+  Route,
+  RouterOutlet,
+  RouteParams,
+  ROUTER_PROVIDERS,
+  HashLocationStrategy,
+  LocationStrategy
+} from 'angular2/router';
+
+@Component({
+  selector: 'new-router-content',
+  templateUrl: 'slowslowslownew.html'
+  // template: `
+  //   <span class='value'>New page</span>
+  // `
+})
+class NewRouterContent{
+
+}
+
+@Component({
+  selector: 'old-router-content',
+  templateUrl: 'slowslowslowold.html'
+  // template: `
+  //   <span class='value'>Old page</span>
+  // `
+})
+class OldRouterContent{
+  
+}
+
+@Component({
+  selector: 'routing-app',
+  template: `
+    <router-outlet></router-outlet>
+    <a class='cancel' [routerLink]="['/Old']">Change to old route</a>
+    <a class='action' [routerLink]="['/New']">Change to new route</a>
+  `,
+  directives: [RouterOutlet, RouterLink]
+})
+class RoutingApp {
+
+}
 
 @Component({selector: 'async-app'})
 @View({
@@ -25,17 +71,35 @@ import {TimerWrapper} from 'angular2/src/facade/async';
       <button class='action' (click)="periodicIncrement()">Periodic Increment</button>
       <button class='cancel' *ngIf="intervalId != null" (click)="cancelPeriodicIncrement()">Cancel</button>
     </div>
+    <div id='xhrRequest'>
+      <span class='val'>{{val5}}</span>
+      <button class='action' (click)="xhrRequest()">XHR Request</button>
+      <button class='cancel' *ngIf="intervalId != null" (click)="cancelXhrRequest()">Cancel</button>
+    </div>
+    <div id='routing'>
+      <routing-app></routing-app>
+    </div>
   `,
-  directives: [NgIf]
+  directives: [NgIf, RoutingApp]
 })
+@RouteConfig([
+  new Route({path: '/', component: OldRouterContent, name: 'Old'}),
+  new Route({path: '/new', component: NewRouterContent, name: 'New'})
+])
 class AsyncApplication {
   val1: number = 0;
   val2: number = 0;
   val3: number = 0;
   val4: number = 0;
+  val5: number = 0;
+  xhr: XHR;
   timeoutId = null;
   multiTimeoutId = null;
   intervalId = null;
+
+  constructor(xhr: XHR) {
+    this.xhr = xhr;
+  }
 
   increment(): void { this.val1++; };
 
@@ -90,8 +154,18 @@ class AsyncApplication {
       this.intervalId = null;
     }
   };
+
+  xhrRequest(): void {
+    this.xhr.get('slowslowslowdata.json').then((response) => {
+      this.val5 = JSON.parse(response).value;
+    });
+  }
+
+  cancelXhrRequest(): void {
+
+  }
 }
 
 export function main() {
-  bootstrap(AsyncApplication);
+  bootstrap(AsyncApplication, [ROUTER_PROVIDERS, provide(LocationStrategy, {useClass: HashLocationStrategy})]);
 }
