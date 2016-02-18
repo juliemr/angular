@@ -10,16 +10,18 @@ import {
   xit
 } from 'angular2/testing_internal';
 
-import {XHRImpl} from 'angular2/src/platform/browser/xhr_impl';
+import {XHR} from 'angular2/src/compiler/xhr';
+// import {XHRImpl} from 'angular2/src/platform/browser/xhr_impl';
 import {PromiseWrapper} from 'angular2/src/facade/async';
+
 
 export function main() {
   describe('XHRImpl', () => {
-    var xhr: XHRImpl;
+    var xhr: XHR;
     var url200 = '/base/modules/angular2/test/platform/browser/static_assets/200.html';
     var url404 = '/base/modules/angular2/test/platform/browser/static_assets/404.html';
 
-    beforeEach(() => { xhr = new XHRImpl(); });
+    beforeEach(inject([XHR], (xhrImpl) => { xhr = xhrImpl; }));
 
     it('should resolve the Promise with the file content on success',
        inject([AsyncTestCompleter], (async) => {

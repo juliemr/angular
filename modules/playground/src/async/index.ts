@@ -2,7 +2,7 @@ import {bootstrap} from 'angular2/bootstrap';
 import {Component, View, provide} from 'angular2/core';
 import {NgIf} from 'angular2/common';
 import {TimerWrapper} from 'angular2/src/facade/async';
-import {XHR} from 'angular2/src/compiler/xhr';
+import {XHR} from 'angular2/compiler';
 import {
   RouterLink,
   RouteConfig,
@@ -91,7 +91,7 @@ class AsyncApplication {
   val2: number = 0;
   val3: number = 0;
   val4: number = 0;
-  val5: number = 0;
+  val5: string = '0';
   xhr: XHR;
   timeoutId = null;
   multiTimeoutId = null;
@@ -156,8 +156,8 @@ class AsyncApplication {
   };
 
   xhrRequest(): void {
-    this.xhr.get('slowslowslowdata.json').then((response) => {
-      this.val5 = JSON.parse(response).value;
+    this.xhr.get('slowslowslowdata.txt').then((response) => {
+      this.val5 = response;
     });
   }
 
