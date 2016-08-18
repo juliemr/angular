@@ -8,7 +8,7 @@
 
 import {Component, Injectable, Input} from '@angular/core';
 import {ComponentFixtureAutoDetect, ComponentFixtureNoNgZone, TestBed, async, withModule} from '@angular/core/testing';
-import {dispatchEvent} from '@angular/platform-browser/testing/browser_util';
+import {dispatchEvent, el} from '@angular/platform-browser/testing/browser_util';
 import {expect} from '@angular/platform-browser/testing/matchers';
 
 @Component({selector: 'simple-comp', template: `<span>Original {{simpleBinding}}</span>`})
@@ -83,7 +83,7 @@ class NestedAsyncTimeoutComp {
 }
 
 export function main() {
-  fdescribe('ComponentFixture', () => {
+  describe('ComponentFixture', () => {
     beforeEach(async(() => {
       TestBed.configureTestingModule({
         declarations: [
@@ -119,7 +119,7 @@ export function main() {
          expect(componentFixture.nativeElement).toHaveText('11');
        }));
 
-    fit('should signal through whenStable when the fixture is stable (autoDetectChanges)',
+    it('should signal through whenStable when the fixture is stable (autoDetectChanges)',
        async(() => {
          let componentFixture = TestBed.createComponent(AsyncComp);
          componentFixture.autoDetectChanges();

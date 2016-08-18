@@ -31,16 +31,17 @@ class AsyncTimeoutComp {
 
 export function main() {
   describe('ComponentFixture', () => {
-    beforeEach(async(() => {
+    beforeEach((done) => {
       TestBed.configureTestingModule({
         declarations: [
           AsyncComp, AsyncTimeoutComp
         ]
       });
-    }));
+      done();
+    });
 
     it('should signal through whenStable when the fixture is stable (autoDetectChanges)',
-      async(() => {
+      (done) => {
         let componentFixture = TestBed.createComponent(AsyncTimeoutComp);
         componentFixture.autoDetectChanges();
         expect(componentFixture.nativeElement.innerHTML).toContain('1');
@@ -55,7 +56,9 @@ export function main() {
         componentFixture.whenStable().then((waited) => {
           expect(waited).toBe(true);
           expect(componentFixture.nativeElement.innerHTML).toContain('2');
+          done();
         });
-      }));
+        done();
+      });
   });
 }

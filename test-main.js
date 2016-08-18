@@ -103,5 +103,5 @@ System.import('@angular/core/testing')
 
 
 function onlySpecFiles(path) {
-  return /_spec\.js$/.test(path);
+  return /micro_debug_spec\.js$/.test(path);
 }
